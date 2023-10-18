@@ -15,16 +15,20 @@ interface Props {
 export const DropCustomer = async (
   info: Props,
 
-  success: any,
-  failure: any,
-  loading: any,
-  setOpen: any,
-  removeList: any
+  success: (message: { message: string }) => void,
+  failure: (data: any) => void,
+  loading: (load: boolean) => void,
+  setOpen: (open: boolean) => void,
+  removeList: (res: LIST) => void
 ) => {
   console.log(info);
   loading(true);
   try {
-    const res = await axiosInstance.post<LIST>("/planner", info);
+    const time = info.schedule?.toLocaleString().split(",")[0];
+    const res = await axiosInstance.post<LIST>("/planner", {
+      ...info,
+      schedule: time,
+    });
 
     success({ message: "customer added successfully" });
     loading(false);
@@ -33,7 +37,10 @@ export const DropCustomer = async (
   } catch (error) {
     const err = error as AxiosError;
     setOpen(true);
+
     failure(err.response?.data);
     loading(false);
   }
 };
+
+export const Sort = async () => {};

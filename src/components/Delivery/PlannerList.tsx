@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDrop } from "react-dnd";
 import { RiAddCircleFill } from "react-icons/ri";
 import { DropCustomer } from "../common/request";
@@ -8,7 +8,7 @@ import { DropCustomer } from "../common/request";
 import { LIST } from "./ParentList";
 import DatePicker from "react-date-picker";
 
-type ValuePiece = Date | string | null | undefined;
+type ValuePiece = Date | null;
 
 export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
@@ -20,14 +20,10 @@ interface Props {
 }
 
 let lit = "";
-let sched: Value = new Date()?.toLocaleString().split(",")[0];
 const PlannerList = ({ removeList }: Props) => {
+  let schedule: Value = new Date();
   const [success, setSuccess] = useState({} as { message: string });
-  const [error, setError] = useState(
-    {} as {
-      error: string;
-    }
-  );
+  const [error, setError] = useState({} as { error: string });
   const [value, onChange] = useState<Value>(new Date());
 
   const [open, setOpen] = useState(true);
@@ -35,29 +31,28 @@ const PlannerList = ({ removeList }: Props) => {
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "customer",
-    drop: (item) => addImageBoard(item as ITEM, lit, sched),
+    drop: (item) => addImageBoard(item as ITEM, lit, schedule),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }));
-  useEffect(() => {}, [value]);
-  const addImageBoard = (item: ITEM, slot: string, sched: Value) => {
+  // useEffect(() => {}, [value]);
+  const addImageBoard = (item: ITEM, slot: string, schedule: Value) => {
     const info = {
       name: item.item?.name,
       customerId: item.item?._id,
       DropOffLocation: item.item?.DropOffLocation,
       pickUpLocation: item.item?.pickUpLocation,
       slot,
-      schedule: sched,
+      schedule: schedule,
     };
-    console.log(info);
+    console.log(info, schedule);
 
     DropCustomer(info, setSuccess, setError, setLoading, setOpen, removeList);
   };
   const handleDate = (date: Value) => {
-    console.log(date);
-    sched = date?.toLocaleString().split(",")[0];
     onChange(date);
+    schedule = date;
   };
 
   const slot = ["SLOT1", "SLOT2", "SLOT3", "SLOT4"];
@@ -65,7 +60,7 @@ const PlannerList = ({ removeList }: Props) => {
   const maxDate = new Date();
   const minDate = new Date();
   maxDate.setDate(maxDate.getDate() + 7);
-
+  console.log(value);
   return (
     <div>
       <p
@@ -77,10 +72,8 @@ const PlannerList = ({ removeList }: Props) => {
         <p className="text-xl text-slate-600 font-bold"> Select Date</p>
         <DatePicker
           className={`mx-auto z-20 `}
-          value={value?.toLocaleString()}
-          onChange={(date) => {
-            handleDate(date);
-          }}
+          value={value}
+          onChange={(date) => handleDate(date)}
           minDate={minDate}
           maxDate={maxDate}
         />
