@@ -19,9 +19,7 @@ interface Props {
   removeList: (item: LIST) => void;
 }
 
-let lit = "";
 const PlannerList = ({ removeList }: Props) => {
-  let schedule: Value = new Date();
   const [success, setSuccess] = useState({} as { message: string });
   const [error, setError] = useState({} as { error: string });
   const [value, onChange] = useState<Value>(new Date());
@@ -31,28 +29,29 @@ const PlannerList = ({ removeList }: Props) => {
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "customer",
-    drop: (item) => addImageBoard(item as ITEM, lit, schedule),
+    drop: (item) => addImageBoard(item as ITEM),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }));
   // useEffect(() => {}, [value]);
-  const addImageBoard = (item: ITEM, slot: string, schedule: Value) => {
+  const addImageBoard = (item: ITEM) => {
+    const time = JSON.parse(localStorage.getItem("date")!).split(",")[0];
+    const slot = localStorage.getItem("slot")!;
     const info = {
       name: item.item?.name,
       customerId: item.item?._id,
       DropOffLocation: item.item?.DropOffLocation,
       pickUpLocation: item.item?.pickUpLocation,
       slot,
-      schedule: schedule,
+      schedule: time,
     };
-    console.log(info, schedule);
 
     DropCustomer(info, setSuccess, setError, setLoading, setOpen, removeList);
   };
   const handleDate = (date: Value) => {
+    localStorage.setItem("date", JSON.stringify(date?.toLocaleString()));
     onChange(date);
-    schedule = date;
   };
 
   const slot = ["SLOT1", "SLOT2", "SLOT3", "SLOT4"];
@@ -127,7 +126,10 @@ const PlannerList = ({ removeList }: Props) => {
             ref={drop}
           >
             <p>{item}</p>
-            <div className="p-15 text-center" onDrop={() => (lit = item)}>
+            <div
+              className="p-15 text-center"
+              onDrop={() => localStorage.setItem("slot", item)}
+            >
               <RiAddCircleFill className="mx-auto" size={40} color="green" />
               <p> Drag & Drop a customer</p>
             </div>
