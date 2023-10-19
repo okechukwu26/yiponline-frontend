@@ -4,40 +4,39 @@ import { useState } from "react";
 import { useDrop } from "react-dnd";
 import { RiAddCircleFill } from "react-icons/ri";
 import { DropCustomer } from "../common/request";
+import dayjs from "dayjs";
 
 import { LIST } from "./ParentList";
-import DatePicker from "react-date-picker";
 
-type ValuePiece = Date | null;
-
-export type Value = ValuePiece | [ValuePiece, ValuePiece];
+import DatePickers from "../common/DatePicker";
 
 interface ITEM {
   item: LIST;
 }
 interface Props {
   removeList: (item: LIST) => void;
+  SLOT: string[];
 }
-
-const PlannerList = ({ removeList }: Props) => {
+let slot = "";
+let schedule = new Date();
+const PlannerList = ({ removeList, SLOT }: Props) => {
   const [success, setSuccess] = useState({} as { message: string });
   const [error, setError] = useState({} as { error: string });
-  const [value, onChange] = useState<Value>(new Date());
+  const [value, onChange] = useState(new Date());
 
   const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "customer",
-    drop: (item) => addImageBoard(item as ITEM),
+    drop: (item) => addImageBoard(item as ITEM, slot, schedule),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }));
   // useEffect(() => {}, [value]);
-  const addImageBoard = (item: ITEM) => {
-    const time = JSON.parse(localStorage.getItem("date")!).split(",")[0];
-    const slot = localStorage.getItem("slot")!;
+  const addImageBoard = (item: ITEM, slot: string, schedule: Date) => {
+    const time = dayjs(schedule).format("DD/MM/YYYY");
     const info = {
       name: item.item?.name,
       customerId: item.item?._id,
@@ -49,17 +48,23 @@ const PlannerList = ({ removeList }: Props) => {
 
     DropCustomer(info, setSuccess, setError, setLoading, setOpen, removeList);
   };
-  const handleDate = (date: Value) => {
-    localStorage.setItem("date", JSON.stringify(date?.toLocaleString()));
+  const handleDate = (date: Date) => {
+    localStorage.setItem(
+      "date",
+      JSON.stringify(dayjs(date).format("DD/MM/YYYY"))
+    );
+    schedule = date;
     onChange(date);
   };
 
-  const slot = ["SLOT1", "SLOT2", "SLOT3", "SLOT4"];
+  const handleSlot = (item: string) => {
+    slot = item;
+  };
 
   const maxDate = new Date();
   const minDate = new Date();
   maxDate.setDate(maxDate.getDate() + 7);
-  console.log(value);
+
   return (
     <div>
       <p
@@ -69,12 +74,12 @@ const PlannerList = ({ removeList }: Props) => {
       </p>
       <div className="text-center mx-auto font-[poppins]">
         <p className="text-xl text-slate-600 font-bold"> Select Date</p>
-        <DatePicker
-          className={`mx-auto z-20 `}
+        <DatePickers
           value={value}
-          onChange={(date) => handleDate(date)}
+          handleDate={handleDate}
           minDate={minDate}
           maxDate={maxDate}
+          style="mx-auto  z-20 p-3 text-center mt-3 rounded-xl font-[poppins] hover:bg-green-500"
         />
       </div>
 
@@ -117,19 +122,16 @@ const PlannerList = ({ removeList }: Props) => {
         className=" grid md:grid-cols-1 gap-10 md:mt-2 mt-5 grid-cols-2 p-10"
         ref={drop}
       >
-        {slot.map((item) => (
+        {SLOT.map((slot) => (
           <div
-            key={item}
+            key={slot}
             className={`border py-3 rounded-md font-[poppins] border-3 shadow-lg text-center ${
               isOver && "cursor-pointer"
             }`}
             ref={drop}
           >
-            <p>{item}</p>
-            <div
-              className="p-15 text-center"
-              onDrop={() => localStorage.setItem("slot", item)}
-            >
+            <p>{slot}</p>
+            <div className="p-15 text-center" onDrop={() => handleSlot(slot)}>
               <RiAddCircleFill className="mx-auto" size={40} color="green" />
               <p> Drag & Drop a customer</p>
             </div>

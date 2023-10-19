@@ -18,7 +18,7 @@ const Customer = ({
     let classes =
       "shadow-2xl font-[poppins]  mx-auto text-center my-40  border-cyan-200";
     if (open) {
-      console.log(open);
+     
       classes += "mt-60";
     }
     return classes;
@@ -26,7 +26,7 @@ const Customer = ({
   return (
     <table className={top()}>
       <thead className="text-white">
-        <tr className="p-4 ">
+        <tr className="p-4 font-[poppins] ">
           <th className=" py-3 bg-green-800 md:text-xl text-xs ">Name</th>
           <th className="py-3 bg-green-500 md:text-xl text-xs ">PickUp</th>
           <th className="py-3 bg-green-800 md:text-xl text-xs ">DropOff</th>
@@ -38,7 +38,7 @@ const Customer = ({
         {customer.map((item) => (
           <tr
             key={item._id}
-            className="odd:bg-slate-100 hover:bg-green-500 hover:text-white even:bg-white-300"
+            className="odd:bg-slate-100 font-[poppins] hover:bg-green-500 hover:text-white even:bg-white-300"
           >
             <td className="py-3 md:px-6 px-2">{item.name}</td>
             <td className="py-3 md:px-6 px-2">{item.pickUpLocation}</td>

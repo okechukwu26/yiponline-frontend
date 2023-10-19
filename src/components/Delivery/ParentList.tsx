@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 
 import DeliveryList from "./DeliveryList";
-import PlannerList, { Value } from "./PlannerList";
+import PlannerList from "./PlannerList";
 import { axiosInstance } from "../../Service/axiosInstance";
 
 import Customer from "./Customer";
-import DatePicker from "react-date-picker";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
+import dayjs from "dayjs";
+import DatePickers from "../common/DatePicker";
+import { SortByTimeAndSlot } from "../common/request";
 
 export interface LIST {
   _id: string;
@@ -29,7 +31,7 @@ export interface CUSTOMER {
 const ParentList = () => {
   const [CustomerSlot, setCustomerSlot] = useState([] as CUSTOMER[]);
   const [List, setList] = useState([] as Array<LIST>);
-  const [date, setDate] = useState<Value>(new Date());
+  const [date, setDate] = useState(new Date());
   const [Slot, setSlot] = useState("SLOT1");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,23 +46,30 @@ const ParentList = () => {
       setLoading(true);
       const res = await axiosInstance.get<LIST[]>("/customer");
       setList(res.data);
-      console.log(res.data);
+
       setLoading(false);
     } catch (error) {
       console.log(error);
     }
   };
+  const handleDate = async (date: Date) => {
+    const time = dayjs(date).format("DD/MM/YYYY");
+    const data = await SortByTimeAndSlot(time, Slot);
+    if (data) {
+      setCustomerSlot(data);
+    }
+    setDate(date);
+  };
 
   const handleSlot = async (slot: string) => {
     if (slot) {
+      const time = dayjs(date).format("DD/MM/YYYY");
       setSlot(slot);
-      console.log(slot);
-      const schedule = date?.toLocaleString().split(",")[0];
-      const res = await axiosInstance.get<CUSTOMER[]>(
-        `/planner/slot?schedule=${schedule}&slot=${slot}`
-      );
-      console.log(res.data);
-      setCustomerSlot(res.data);
+
+      const data = await SortByTimeAndSlot(time, slot);
+      if (data) {
+        setCustomerSlot(data);
+      }
     }
   };
 
@@ -71,20 +80,12 @@ const ParentList = () => {
   const removeList = (data: any) => {
     setList((prev) => [...prev.filter((item) => item._id !== data.customerId)]);
   };
-  const handleDate = async (date: Value) => {
-    setDate(date);
-    const schedule = date?.toLocaleString().split(",")[0];
-    const res = await axiosInstance.get<CUSTOMER[]>(
-      `/planner/slot?schedule=${schedule}&slot=${Slot}`
-    );
-    setCustomerSlot(res.data);
-  };
 
   return (
     <>
       <div className="grid md:grid-cols-2 font-[poppins] gap-4 md:mt-20 mt-5 grid-cols-1 mb-10">
         <DeliveryList list={List} loading={loading} />
-        <PlannerList removeList={removeList} />
+        <PlannerList removeList={removeList} SLOT={slot} />
       </div>
       <div>
         <p className=" text-center font-extrabold text-3xl  text-slate-600 mt-10">
@@ -93,21 +94,21 @@ const ParentList = () => {
         <div className=" grid md:grid-cols-2 gap-4 grid-cols-1 mx-10">
           <div className=" w-72 font-medium h-10">
             <div className="bg-green-500 text-center mx-auto   w-full flex  items-center justify-center rounded-xl p-2">
-              <p className="">Sort by Date</p>
+              <p className="font-[poppins]">Sort by Date</p>
             </div>
-            <DatePicker
-              className={`mx-auto z-20 mt-2 ml-10 `}
-              value={date?.toLocaleString()}
-              onChange={(date) => handleDate(date)}
+            <DatePickers
+              value={date}
+              handleDate={handleDate}
               minDate={minDate}
               maxDate={maxDate}
+              style="ml-10 z-20 p-3 text-center mt-3 font-[poppins] hover:bg-green-500"
             />
           </div>
           <div
             onClick={() => setOpen(!open)}
-            className="w-72 md:mt-0 mt-10 font-medium h-10"
+            className="w-72 md:mt-0 mt-14 font-medium h-10"
           >
-            <div className="bg-green-500 w-full  flex items-center justify-between rounded p-2">
+            <div className="bg-green-500 w-full font-[poppins]  flex items-center justify-between rounded-xl p-2">
               {Slot === "" ? "Sort by Slot" : Slot}
               {open && <BiChevronDown size={20} />}
               {!open && <BiChevronUp size={20} />}
@@ -121,7 +122,7 @@ const ParentList = () => {
                       setOpen(false);
                     }}
                     key={item}
-                    className=" p-2 text-slate-900 text-sm hover:bg-green-500 rounded-sm hover:text-white"
+                    className=" p-2 text-slate-900 font-[poppins] text-sm hover:bg-green-500 rounded-sm hover:text-white"
                   >
                     {item}
                   </li>
